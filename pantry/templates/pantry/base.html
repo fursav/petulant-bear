@@ -13,6 +13,22 @@
         </ul>
         {% endblock %}
     </div>
+    
+    <h1>
+    {% block pagetitle %}
+    
+    {% endblock %}
+    </h1>
+    
+    <div id="errormsg">
+        {% block errormsg %}        
+        
+            {% if error_message %}
+                <p><strong>{{ error_message }}</strong></p>
+            {% endif %}
+        
+        {% endblock %}
+    </div>   
 
     <div id="content">
         {% block content %}{% endblock %}
