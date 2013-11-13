@@ -18,7 +18,7 @@ def index(request):
             password = form.cleaned_data['password']
             cursor = connection.cursor()
             #check to see if the username password combination is stored in the db
-            cursor.execute("SELECT Username From User WHERE Username = %s AND Password = %s", [username,password])
+            cursor.execute("SELECT Username, UserFName, UserLName From User WHERE Username = %s AND Password = %s", [username,password])
             u = cursor.fetchone()
             #print u
             if u is None:
@@ -26,9 +26,12 @@ def index(request):
                     'form': form,
                     'error_message':'Incorrect Username/Password combination'
                 })
+            name = u[1] + " " + u[2]
             
-            return HttpResponseRedirect(reverse('pantry:home', args=(u[0],)))
-            #return render(request, 'pantry/home.html')
+            request.session['username'] = u[0]
+            request.session['user_name'] = name
+            
+            return HttpResponseRedirect(reverse('pantry:home'))
     else:
         form = LoginForm() # An unbound form
 
@@ -36,12 +39,10 @@ def index(request):
         'form': form,
     })
 
-def home(request,username):
-    cursor = connection.cursor()
-    cursor.execute("SELECT UserFName,UserLName From User WHERE Username = %s", [username])
-    x = cursor.fetchone()
-    name = x[0] + " " + x[1]
+def home(request):
     
-    return render(request, 'pantry/home.html', {
-        'name':name
-    })
+    return render(request, 'pantry/home.html')
+    
+def view_products(request):
+    return render(request, 'pantry/product_list.html')
+    
