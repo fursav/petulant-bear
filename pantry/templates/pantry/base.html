@@ -9,8 +9,8 @@
         {% block menubar %}
         <ul>
             <li><a href="{% url 'pantry:home' %}">Home</a></li>
-            <li><a href="/blog/">Blog</a></li>
             <li><a href="{% url 'pantry:product_list' %}">Products</a></li>
+	    <li><a href="{% url 'pantry:dropoff_list' %}">DropOffs</a></li>
         </ul>
         {% endblock %}
     </div>
