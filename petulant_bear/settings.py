@@ -24,6 +24,13 @@ DATABASES = {
         'PASSWORD': '',
         'HOST': '',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
         'PORT': '',                      # Set to empty string for default.
+        #'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        #'NAME': 'cs4400_Group_26',                      # Or path to database file if using sqlite3.
+        # The following settings are not used with sqlite3:
+        #'USER': 'cs4400_Group_26',
+        #'PASSWORD': 'MCxiHrEH',
+        #'HOST': 'academic-mysql.cc.gatech.edu',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+        #'PORT': '',  
     }
 }
 

@@ -48,8 +48,45 @@ def home(request):
     
     return render(request, 'pantry/home.html')
     
+    #at the moment only displays all the products
+    #TODO: allow seach by name, switch back to viewing all products
 def view_products(request):
-    return render(request, 'pantry/product_list.html')
+    cursor = connection.cursor()
+    cursor.execute("""
+                    CREATE VIEW if not exists DroppedOffQty AS 
+                    SELECT Product.ProductName, Cost, SUM(Quantity) AS SQ
+                    FROM Product
+                    LEFT JOIN DropoffTransaction
+                    ON Product.ProductName = DropoffTransaction.ProductName
+                    GROUP BY Product.ProductName;
+                   """)
+    cursor.execute("""
+                    CREATE VIEW if not exists pickup_bags as SELECT PickupTransaction.CID,BagName
+                    FROM PickupTransaction 
+                    JOIN Client 
+                    ON PickupTransaction.CID 
+                    WHERE PickupTransaction.CID = Client.CID;
+                   """)
+    cursor.execute("""
+                    CREATE VIEW if not exists PickedUpQty AS SELECT ProductName, SUM(CurrentMnthQty) AS CMQ
+                    FROM pickup_bags 
+                    JOIN Holds 
+                    ON pickup_bags.BagName = Holds.BagName 
+                    GROUP BY ProductName;
+                   """)
+    cursor.execute("""
+                    CREATE VIEW if not exists QtyOnHand AS
+                    SELECT ProductName, ifnull(SQ,0)-ifnull(CMQ,0) AS QoH, Cost
+                    FROM DroppedOffQty 
+                    LEFT NATURAL JOIN PickedUpQty
+                    GROUP BY ProductName;
+                   """)
+    cursor.execute("SELECT * FROM QtyOnHand")
+    products = cursor.fetchall()
+    print products
+    return render(request, 'pantry/product_list.html',{
+        'products':products
+    })
 
 def view_dropoffs(request):
     return render(request, 'pantry/dropoff_list.html')

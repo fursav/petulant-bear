@@ -5,5 +5,22 @@ Product List
 {% endblock %}
 
 {% block content %}
+
 <a href="{% url 'pantry:create_product' %}">Create Product</a>
+<table border="1" cellpadding="10">
+    <tr>
+        <th>Product</th>
+        <th>Quantity</th>
+        <th>Cost</th>
+    </tr>
+
+{% for product in products %}
+    <tr>
+        <td>{{product.0}}</td>
+        <td>{{product.1}}</td>
+        <td>{{product.2}}</td>
+    </tr>
+{% endfor %}
+
+</table>
 {% endblock %}
