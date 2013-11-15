@@ -58,21 +58,22 @@ def add_dropoff(request):
     return
 
 def create_product(request):
-	if request.method == 'POST': # If the form has been submitted...
-        	form = CreateProductForm(request.POST) # A form bound to the POST data
-        	if form.is_valid(): # All validation rules pass
-			product_name = form.cleaned_data['product_name']
-            		cost = form.cleaned_data['cost']
-            		source = form.cleaned_data['source']
-            		cursor = connection.cursor()
-            		cursor.execute("INSERT INTO Product VALUES (%s, %s, %s)", [product_name, cost, source])
-        
+    if request.method == 'POST': # If the form has been submitted...
+        form = CreateProductForm(request.POST) # A form bound to the POST data
+        if form.is_valid(): # All validation rules pass
+            product_name = form.cleaned_data['product_name']
+            cost = form.cleaned_data['cost']
+            source = form.cleaned_data['source']
+            cursor = connection.cursor()
+            cursor.execute("INSERT INTO Product VALUES (%s,%s,%s)", [product_name, cost, source])
             
-   	    		return HttpResponseRedirect(reverse('pantry:product_list'))
-	else:
-        	form = CreateProductForm() # An unbound form
-	print "adding"
-	return render(request, 'pantry/create_product.html', {'form': form,})
+            #need this line after altering database in django 1.5
+            transaction.commit_unless_managed()
+
+            return HttpResponseRedirect(reverse('pantry:product_list'))
+    else:
+        form = CreateProductForm() # An unbound form
+    return render(request, 'pantry/create_product.html', {'form': form,})
 
 
     
