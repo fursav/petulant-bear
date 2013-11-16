@@ -1,0 +1,61 @@
+
+/** {
+    font-size:12;
+}
+
+#menubar {
+    background-color:blue;
+    font-size:30;
+}*/
+
+body {    
+    font-family: arial; 
+    font-size:12;   
+}
+
+h1 {
+    color:#39F;
+    text-align: center;
+}
+table {
+    margin-left: auto;
+    margin-right: auto;
+    border-spacing:0;
+    width:80%;
+}
+
+table td, table th
+{
+    padding: 10px; /* 'cellpadding' equivalent */
+}
+
+td {
+    font-weight: bold;
+}
+p {
+    color:#09F;
+    text-indent: 20px;
+}
+#menubar li {
+    display: inline-block;
+}
+
+label, input[type="text"]{
+    display:inline-block;
+}
+label
+{
+    margin-right: 5px;
+    font-weight: bold;
+}
+.field{
+    width:100%;
+    overflow:auto;
+    margin:5px 0px;
+}
+
+.field input[type="submit"]{
+    display:block;
+    margin:0px auto;
+}
+
