@@ -8,17 +8,18 @@
     <script type="text/javascript" src="{% static 'js/jquery-2.0.3.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/jquery-ui-1.10.3.custom.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/script.js' %}"></script>
-</head>
-<script>
-$( document ).ready(function() {
-    styleUI();
-    $("label").autoWidth();
-    $('form').center();
-    
-    //$("div.myfields div label").autoWidth();
-});
+    <script>
+    $( document ).ready(function() {
+        styleUI();
+        $("label").autoWidth();
+        $('form').center();
+        
+        //$("div.myfields div label").autoWidth();
+    });
 
-</script>
+    </script>
+</head>
+
 <body>
     <div id="menubar" class="ui-widget-header">
         {% block menubar %}

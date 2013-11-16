@@ -1,8 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import render, render_to_response
 from django.http import HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
 from django import forms
 from django.db import connection
+from django.core import serializers
+from django.template import RequestContext
 # Create your views here.
 
 class LoginForm(forms.Form):
@@ -51,6 +53,23 @@ def home(request):
     #at the moment only displays all the products
     #TODO: allow seach by name, switch back to viewing all products
 def view_products(request):
+    if request.is_ajax():
+        q = request.GET.get('q')
+        if q is not None:     
+            cursor = connection.cursor()
+            cursor.execute("""
+                            SELECT * FROM QtyOnHand
+                            WHERE ProductName
+                            LIKE %s;
+                           """,['%' + q + '%'])
+            products = cursor.fetchall()
+            
+            
+            #return HttpResponse(serializers.serialize("json", products))
+            return render_to_response('pantry/product_table.html',{ 'products':products },context_instance = RequestContext(request))
+
+
+
     cursor = connection.cursor()
     cursor.execute("""
                     CREATE VIEW if not exists DroppedOffQty AS 

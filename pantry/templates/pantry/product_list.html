@@ -5,22 +5,54 @@ Product List
 {% endblock %}
 
 {% block content %}
+<script>
+$(document).ready(function() {
+    
+    
 
-<a href="{% url 'pantry:create_product' %}">Create Product</a><br><br>
-<table>
-    <tr>
-        <th>Product</th>
-        <th>Quantity</th>
-        <th>Cost</th>
-    </tr>
+    $(document).keypress(function(e){
+        if (e.which == 13){
+            $("#searchSubmit").click();
+        }
+    });
 
-{% for product in products %}
-    <tr>
-        <td>{{product.0}}</td>
-        <td>{{product.1}}</td>
-        <td>{{product.2}}</td>
-    </tr>
-{% endfor %}
+    $('#searchSubmit').click(function() {
+        searchProducts();
+    });
+    
 
-</table>
+    $('#q').keyup(function() {
+      var $this = $(this);
+      setTimeout(function() {
+        searchProducts()}, 500);
+    });
+    
+    $("#searchSubmit").button({
+     icons: {
+       primary: "ui-icon-search"
+     }
+   })
+});
+
+function searchProducts() {
+    q = $('#q').val();
+    $.get( "{% url 'pantry:product_list' %}",{"q":q}).done(function( data ) {
+        //alert( "Data Loaded: " + data );
+        $("#product_list").html(data);
+        styleUI();
+    });;    
+}
+</script>
+<div class="ui-widget">
+<a href="{% url 'pantry:create_product' %}">Create Product</a>
+
+<span style="float:right">
+<input id="q" />
+<input type="submit" value="Search" id="searchSubmit">
+</span>
+</div><br>
+<div id="product_list">
+{% include "product_table.html" %}
+
+</div>
 {% endblock %}
