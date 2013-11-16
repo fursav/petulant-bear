@@ -83,7 +83,6 @@ def view_products(request):
                    """)
     cursor.execute("SELECT * FROM QtyOnHand")
     products = cursor.fetchall()
-    print products
     return render(request, 'pantry/product_list.html',{
         'products':products
     })

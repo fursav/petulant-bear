@@ -2,20 +2,35 @@
 <html lang="en">
 <head>
     <title>{% block title %}The Bear is petulant.{% endblock %}</title>
+    {% load staticfiles %}
+    <link rel="stylesheet" href="{% static 'css/ui-lightness/jquery-ui-1.10.3.custom.css' %}"/>    
+    <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+    <script type="text/javascript" src="{% static 'js/jquery-2.0.3.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/jquery-ui-1.10.3.custom.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/script.js' %}"></script>
 </head>
+<script>
+$( document ).ready(function() {
+    styleUI();
+    $("label").autoWidth();
+    $('form').center();
+    
+    //$("div.myfields div label").autoWidth();
+});
 
+</script>
 <body>
-    <div id="menubar">
+    <div id="menubar" class="ui-widget-header">
         {% block menubar %}
         <ul>
             <li><a href="{% url 'pantry:home' %}">Home</a></li>
             <li><a href="{% url 'pantry:product_list' %}">Products</a></li>
-	    <li><a href="{% url 'pantry:dropoff_list' %}">DropOffs</a></li>
+	        <li><a href="{% url 'pantry:dropoff_list' %}">DropOffs</a></li>
         </ul>
         {% endblock %}
     </div>
     
-    <h1>
+    <h1 class="">
     {% block pagetitle %}
     
     {% endblock %}

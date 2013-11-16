@@ -1,8 +1,9 @@
 from django.conf.urls import patterns, url
-
+from django.conf import settings
 from pantry import views
 
 urlpatterns = patterns('',
+    url(r'^static(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.ROOT_PATH }),
     url(r'^$', views.index, name='index'),
     url(r'^home/$', views.home, name='home'),
     url(r'^products/$', views.view_products, name='product_list'),
