@@ -1,8 +1,8 @@
-from django.shortcuts import render, render_to_response
+from django.shortcuts import render, render_to_response, redirect
 from django.http import HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
 from django import forms
-from django.db import connection
+from django.db import connection, transaction, IntegrityError
 from django.core import serializers
 from django.template import RequestContext
 # Create your views here.
@@ -52,7 +52,7 @@ def home(request):
     
     #at the moment only displays all the products
     #TODO: allow seach by name, switch back to viewing all products
-def view_products(request):
+def view_products(request,**kwargs):
     if request.is_ajax():
         q = request.GET.get('q')
         if q is not None:     
@@ -120,11 +120,15 @@ def create_product(request):
             cost = form.cleaned_data['cost']
             source = form.cleaned_data['source']
             cursor = connection.cursor()
-            cursor.execute("INSERT INTO Product VALUES (%s,%s,%s)", [product_name, cost, source])
             
-            #need this line after altering database in django 1.5
-            transaction.commit_unless_managed()
-
+            try:
+                cursor.execute("INSERT INTO Product VALUES (%s,%s,%s)", [product_name, cost, source])
+            
+                #need this line after altering database in django 1.5
+                transaction.commit_unless_managed()
+            except IntegrityError:
+                return render(request, 'pantry/create_product.html', {'form': form, 'error_message':'Product already exists'})
+            #return redirect('pantry:product_list', kwargs={"success_message":smsg})
             return HttpResponseRedirect(reverse('pantry:product_list'))
     else:
         form = CreateProductForm() # An unbound form

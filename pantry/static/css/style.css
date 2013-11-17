@@ -32,9 +32,15 @@ table td, table th
 td {
     font-weight: bold;
 }
+
 p {
     color:#09F;
     text-indent: 20px;
+}
+
+
+#errormsg p{
+    color:red;
 }
 #menubar li {
     display: inline-block;

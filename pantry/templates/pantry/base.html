@@ -45,7 +45,17 @@
             {% endif %}
         
         {% endblock %}
-    </div>   
+    </div>
+    
+    <div id="successmsg">
+        {% block successmsg %}        
+        
+            {% if success_message %}
+                <p><strong>{{ success_message }}</strong></p>
+            {% endif %}
+        
+        {% endblock %}
+    </div> 
 
     <div id="content">
         {% block content %}{% endblock %}
