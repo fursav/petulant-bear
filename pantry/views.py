@@ -15,6 +15,7 @@ class CreateProductForm(forms.Form):
     product_name = forms.CharField(max_length= 100)
     cost = forms.DecimalField(decimal_places = 2)
     source = forms.CharField(max_length = 100)
+	
 
 
 def index(request):
@@ -107,7 +108,35 @@ def view_products(request,**kwargs):
     })
 
 def view_dropoffs(request):
-    return render(request, 'pantry/dropoff_list.html')
+	# if request.is_ajax():
+        # q = request.GET.get('q')
+        # if q is not None:     
+            # cursor = connection.cursor()
+            # cursor.execute("""
+                            # SELECT Dropofftransaction.ProductName as Product, SourceName as Source, Quantity, Date
+							# FROM DropoffTransaction
+							# JOIN Product on Product.ProductName = DropoffTransaction.ProductName
+                           # """,['%' + q + '%'])
+            # dropoffs = cursor.fetchall()
+            
+            
+            # #return HttpResponse(serializers.serialize("json", products))
+            # return render_to_response('pantry/dropoff_list.html',{ 'dropoffs':dropoffs },context_instance = RequestContext(request))
+
+
+
+    cursor = connection.cursor()
+    cursor.execute("""
+                    SELECT Dropofftransaction.ProductName, SourceName as Source, Quantity, Date
+					FROM DropoffTransaction
+					JOIN Product on Product.ProductName = DropoffTransaction.ProductName
+                   """)
+	#cursor.execute("SELECT * FROM DropoffTransaction")
+    dropoffs = cursor.fetchall()
+    return render(request, 'pantry/dropoff_list.html',{
+        'dropoffs':dropoffs
+    })
+	#return render(request, 'pantry/dropoff_list.html')
 
 def add_dropoff(request):
     return
@@ -133,6 +162,7 @@ def create_product(request):
     else:
         form = CreateProductForm() # An unbound form
     return render(request, 'pantry/create_product.html', {'form': form,})
+
 
 
     
