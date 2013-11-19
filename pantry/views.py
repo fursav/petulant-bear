@@ -22,9 +22,7 @@ class AddDropOffForm(forms.Form):
 	cursor = connection.cursor()
 	cursor.execute("SELECT ProductName FROM Product")
 	names = cursor.fetchall()
-	#print names
 	names = [(x[0],x[0]) for x in names]
-	print names
 	product_name = forms.ChoiceField(choices = names)
 	quantity = forms.IntegerField()
 	date = forms.DateField(initial=datetime.date.today())
@@ -63,8 +61,6 @@ def home(request):
     
     return render(request, 'pantry/home.html')
     
-    #at the moment only displays all the products
-    #TODO: allow seach by name, switch back to viewing all products
 def view_products(request,**kwargs):
     if request.is_ajax():
         q = request.GET.get('q')
@@ -76,12 +72,7 @@ def view_products(request,**kwargs):
                             LIKE %s;
                            """,['%' + q + '%'])
             products = cursor.fetchall()
-            
-            
-            #return HttpResponse(serializers.serialize("json", products))
             return render_to_response('pantry/product_table.html',{ 'products':products },context_instance = RequestContext(request))
-
-
 
     cursor = connection.cursor()
     cursor.execute("""
@@ -149,6 +140,40 @@ def view_dropoffs(request):
         'dropoffs':dropoffs
     })
 	#return render(request, 'pantry/dropoff_list.html')
+
+def view_bags(request):
+
+    cursor = connection.cursor()
+    cursor.execute("""
+                    CREATE VIEW if not exists bag_items AS
+                    SELECT BagName, COUNT(*) AS Num_items  
+                    FROM Holds GROUP BY BagName;
+                   """)
+    cursor.execute("""
+                    CREATE VIEW if not exists bag_cost AS SELECT BagName, SUM(CurrentMnthQty*Cost) as Cost1 FROM Holds 
+                    LEFT JOIN Product 
+                    ON  Holds.ProductName = Product.ProductName 
+                    GROUP BY BagName;
+                   """)
+    cursor.execute("""
+                    CREATE VIEW if not exists bag_clients AS
+                    SELECT BagName, COUNT(*) as Num_clients 
+                    FROM Client 
+                    GROUP BY BagName;
+                   """)
+    cursor.execute("""
+                    SELECT bag_items.BagName, Num_items, ifnull(Num_clients,0), Cost1 
+                    FROM bag_items 
+                    JOIN bag_cost 
+                    ON bag_items.BagName = bag_cost.BagName 
+                    LEFT JOIN bag_clients 
+                    ON bag_items.BagName = bag_clients.BagName;
+                   """)
+    #cursor.execute("SELECT * FROM QtyOnHand")
+    bags = cursor.fetchall()
+    return render(request, 'pantry/bag_list.html',{
+        'bags':bags
+    })
 
 ################################################## Hannah's work 
 

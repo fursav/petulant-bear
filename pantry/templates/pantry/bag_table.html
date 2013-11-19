@@ -1,0 +1,17 @@
+<table>
+    <tr>
+        <th>Bag Name</th>
+        <th>#Items</th>
+        <th>#Clients</th>
+        <th>Cost ($)</th>
+    </tr>
+
+{% for bag in bags %}
+    <tr>
+        <td>{{bag.0}}</td>
+        <td>{{bag.1}}</td>
+        <td>{{bag.2}}</td>
+        <td>{{bag.3}}</td>
+    </tr>
+{% endfor %}
+</table>
