@@ -237,6 +237,18 @@ def create_product(request):
     return render(request, 'pantry/create_product.html', {'form': form,})
 
 def view_clients(request):
+	if request.is_ajax():
+		q = request.GET.get('q')
+		if q is not None:     
+			cursor = connection.cursor()
+			cursor.execute("""
+							SELECT CLName, CFName, Street || " " || City || ", " || State || " " || Zip as Address, CPhone, Start
+							FROM Client
+							WHERE CLName LIKE %s OR CFName like %s OR CPhone like %s;
+							""",['%' + q + '%', '%' + q + '%', '%' + q + '%'])
+			clients = cursor.fetchall()
+			return render_to_response('pantry/client_table.html',{ 'clients':clients },context_instance = RequestContext(request))
+
 	cursor = connection.cursor()
 	cursor.execute("""
 					SELECT CLName, CFName, Street || " " || City || ", " || State || " " || Zip as Address, CPhone, Start

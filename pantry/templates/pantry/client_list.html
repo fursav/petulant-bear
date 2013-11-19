@@ -5,7 +5,51 @@ Client List
 {% endblock %}
 
 {% block content %}
-<a href="{% url 'pantry:add_client' %}">Add Client</a>
+<script>
+$(document).ready(function() {
+    
+    
+
+    $(document).keypress(function(e){
+        if (e.which == 13){
+            $("#searchSubmit").click();
+        }
+    });
+
+    $('#searchSubmit').click(function() {
+        searchProducts();
+    });
+    
+
+    $('#q').keyup(function() {
+      var $this = $(this);
+      setTimeout(function() {
+        searchProducts()}, 500);
+    });
+    
+    $("#searchSubmit").button({
+     icons: {
+       primary: "ui-icon-search"
+     }
+   })
+});
+
+function searchProducts() {
+    q = $('#q').val();
+    $.get( "{% url 'pantry:client_list' %}",{"q":q}).done(function( data ) {
+        //alert( "Data Loaded: " + data );
+        $("#client_list").html(data);
+        styleUI();
+    });;    
+}
+</script>
+<div class="ui-widget">
+	<a href="{% url 'pantry:add_client' %}">Add Client</a>
+	<span style="float:right">
+		<input id="q" />
+		<input type="submit" value="Search" id="searchSubmit">
+	</span>
+</div><br>
 <div id="client_list">
 {% include "client_table.html" %}
 
