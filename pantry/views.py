@@ -5,6 +5,7 @@ from django import forms
 from django.db import connection, transaction, IntegrityError
 from django.core import serializers
 from django.template import RequestContext
+import datetime
 # Create your views here.
 
 class LoginForm(forms.Form):
@@ -16,7 +17,18 @@ class CreateProductForm(forms.Form):
     cost = forms.DecimalField(decimal_places = 2)
     source = forms.CharField(max_length = 100)
 	
-
+######
+class AddDropOffForm(forms.Form):
+	cursor = connection.cursor()
+	cursor.execute("SELECT ProductName FROM Product")
+	names = cursor.fetchall()
+	#print names
+	names = [(x[0],x[0]) for x in names]
+	print names
+	product_name = forms.ChoiceField(choices = names)
+	quantity = forms.IntegerField()
+	date = forms.DateField(initial=datetime.date.today())
+########
 
 def index(request):
     if request.method == 'POST': # If the form has been submitted...
@@ -138,8 +150,24 @@ def view_dropoffs(request):
     })
 	#return render(request, 'pantry/dropoff_list.html')
 
+################################################## Hannah's work 
+
 def add_dropoff(request):
-    return
+	if request.method == 'POST': # If the form has been submitted...
+		form = AddDropOffForm(request.POST) # A form bound to the POST data
+		if form.is_valid(): # All validation rules pass
+			product_name = form.cleaned_data['product_name']
+			quantity = form.cleaned_data['quantity']
+			date = form.cleaned_data['date']
+			cursor = connection.cursor()
+			cursor.execute("INSERT INTO DropOffTransaction(ProductName, Quantity, Date) VALUES (%s, %s, %s)", [product_name, quantity, date])
+			transaction.commit_unless_managed()
+
+			return HttpResponseRedirect(reverse('pantry:dropoff_list'))
+	else:
+		form = AddDropOffForm() # An unbound form
+		return render(request, 'pantry/add_dropoff.html', {'form': form,})
+###############################################################################
 
 def create_product(request):
     if request.method == 'POST': # If the form has been submitted...

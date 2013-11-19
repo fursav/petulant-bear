@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block pagetitle %}
+Add Drop Off
+{% endblock %}
+
+{% block content %}
+
+<form action="" method="post">
+<div class="field">
+{% csrf_token %}
+{{ form.as_p }}
+<input type="submit" value="Add Drop Off" />
+</div>
+</form>
+
+{% endblock %}
