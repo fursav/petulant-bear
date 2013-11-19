@@ -1,0 +1,19 @@
+<table>
+    <tr>
+        <th>Last Name</th>
+        <th>First Name</th>
+        <th>Address</th>
+        <th>Telephone</th>
+        <th>Start Date</th>
+    </tr>
+
+{% for client in clients %}
+    <tr>
+        <td>{{client.0}}</td>
+        <td>{{client.1}}</td>
+        <td>{{client.2}}</td>
+        <td>{{client.3}}</td>
+        <td>{{client.4}}</td>
+    </tr>
+{% endfor %}
+</table>

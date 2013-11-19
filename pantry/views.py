@@ -28,6 +28,26 @@ class AddDropOffForm(forms.Form):
 	date = forms.DateField(initial=datetime.date.today())
 ########
 
+class CreateClientForm(forms.Form):
+	cursor = connection.cursor()
+	cursor.execute("SELECT BagName FROM Bag")
+	names = cursor.fetchall()
+	names = [(x[0],x[0]) for x in names]
+
+	first_name = forms.CharField(max_length= 100)
+	last_name = forms.CharField(max_length= 100)
+	phone = forms.CharField(max_length= 12)
+	gender = forms.CharField(max_length= 6)
+	DOB = forms.DateField() 
+	start = forms.DateField()
+	pDay = forms.IntegerField(31,1)
+	apt = forms.CharField(max_length= 100)
+	street = forms.CharField(max_length= 100)
+	city = forms.CharField(max_length= 100)
+	state = forms.CharField(max_length= 100)
+	zip = forms.CharField(max_length= 100)
+	bag_name = forms.ChoiceField(choices = names)
+
 def index(request):
     if request.method == 'POST': # If the form has been submitted...
         form = LoginForm(request.POST) # A form bound to the POST data
@@ -216,6 +236,50 @@ def create_product(request):
         form = CreateProductForm() # An unbound form
     return render(request, 'pantry/create_product.html', {'form': form,})
 
+def view_clients(request):
+	cursor = connection.cursor()
+	cursor.execute("""
+					SELECT CLName, CFName, Street || " " || City || ", " || State || " " || Zip as Address, CPhone, Start
+					FROM Client
+					""")
+	clients = cursor.fetchall()
+	return render(request, 'pantry/client_list.html', {'clients':clients})
+	
+def add_client(request):
+	if request.method == 'POST': # If the form has been submitted...
+		form = CreateClientForm(request.POST) # A form bound to the POST data
+		if form.is_valid(): # All validation rules pass
+			first_name = form.cleaned_data['first_name']
+			last_name = form.cleaned_data['last_name']
+			phone = form.cleaned_data['phone']
+			gender = form.cleaned_data['gender']
+			DOB = form.cleaned_data['DOB']
+			start = form.cleaned_data['start']
+			pDay = form.cleaned_data['pDay']
+			apt = form.cleaned_data['apt']
+			street = form.cleaned_data['street']
+			city = form.cleaned_data['city']
+			state = form.cleaned_data['state']
+			zip = form.cleaned_data['zip']
+			bag_name = form.cleaned_data['bag_name']
+			cursor = connection.cursor()
+            
+			try:
+				cursor.execute("SELECT CID FROM Client ORDER BY CID desc")
+				topCID = cursor.fetchone()
+				print topCID[0]
+				cursor.execute("INSERT INTO Client VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)", 
+				[(topCID[0]+1), first_name, last_name, phone, gender, DOB, start, pDay, apt, street, city, state, zip, bag_name])
+            
+                #need this line after altering database in django 1.5
+				transaction.commit_unless_managed()
+			except IntegrityError:
+				return render(request, 'pantry/add_client.html', {'form': form, 'error_message':'Client already exists'})
+            #return redirect('pantry:product_list', kwargs={"success_message":smsg})
+			return HttpResponseRedirect(reverse('pantry:client_list'))
+	else:
+		form = CreateClientForm() # An unbound form
+	return render(request, 'pantry/add_client.html', {'form': form,})
 
 
     
