@@ -5,4 +5,59 @@ Pickup List
 {% endblock %}
 
 {% block content %}
+<script>
+$(document).ready(function() {
+    
+    $("#table_type").buttonset();  
+    $('input[name=tt]').change(function(){
+
+        searchPickups();
+
+   });  
+
+    $(document).keypress(function(e){
+        if (e.which == 13){
+            $("#searchSubmit").click();
+        }
+    });
+
+    $('#searchSubmit').click(function() {
+        searchPickups();
+    });
+    
+
+    $('#q').keyup(function() {
+      var $this = $(this);
+      setTimeout(function() {
+        searchPickups()}, 500);
+    });
+});
+
+function searchPickups() {
+    q = $('#q').val();
+    tt = $('input[name=tt]:checked').val()
+    $.get( "{% url 'pantry:pickup_list' %}",{"q":q,"tt":tt}).done(function( data ) {
+        //alert( "Data Loaded: " + data );
+        $("#pickup_list").html(data);
+        styleUI();
+    });;    
+}
+
+</script>
+
+<div class="ui-widget">
+<span id="table_type">
+    <input type="radio" name="tt" value="scheduled" id="radio1" checked="checked"><label for="radio1">Scheduled Pickups</label>
+    <input type="radio" name="tt" value="completed" id="radio2"><label for="radio2">Completed Pickups</label>
+</span>
+
+<span style="float:right">
+<input id="q" />
+<input type="submit" value="Search by Day" id="searchSubmit">
+</span>
+</div><br><br>
+<div id="pickup_list">
+{% include "pickup_table.html" %}
+
+</div>
 {% endblock %}

@@ -55,9 +55,11 @@ label
     font-weight: bold;
 }
 .field{
-    width:100%;
+    width:30%;
     overflow:auto;
-    margin:5px 0px;
+    margin-left:auto;
+    margin-right:auto;
+    /*margin:5px 0px;*/
 }
 
 .field input[type="submit"]{

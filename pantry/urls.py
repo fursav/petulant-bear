@@ -14,4 +14,5 @@ urlpatterns = patterns('',
     url(r'^bags/$', views.view_bags, name='bag_list'),
     url(r'^clients/$', views.view_clients, name= 'client_list'),
     url(r'^clients/add_client/$', views.add_client, name='add_client'),
+    url(r'^pickups/$', views.view_pickups, name= 'pickup_list'),
 )

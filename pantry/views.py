@@ -81,7 +81,7 @@ def home(request):
     
     return render(request, 'pantry/home.html')
     
-def view_products(request,**kwargs):
+def view_products(request):
     if request.is_ajax():
         q = request.GET.get('q')
         if q is not None:     
@@ -292,6 +292,72 @@ def add_client(request):
 	else:
 		form = CreateClientForm() # An unbound form
 	return render(request, 'pantry/add_client.html', {'form': form,})
+	
+def view_pickups(request):
+    if request.is_ajax():
+        q = request.GET.get('q')
+        tt = request.GET.get('tt')
+        cursor = connection.cursor()
+        
+        #view scheduled pickups
+        if tt == "scheduled":        
+            if q != "":
+                    cursor.execute("""
+                                    SELECT CLName, CFName, ifnull(Size,0)+1, Apt, Street, City, State, Zip, CPhone, PDay
+                                    FROM Client 
+                                    LEFT JOIN family_size 
+                                    ON Client.CID = family_size.CID
+                                    WHERE PDay = %s
+                                   """,[q])
+            else:
+                cursor.execute("""
+                                SELECT CLName, CFName, ifnull(Size,0)+1, Apt, Street, City, State, Zip, CPhone, PDay
+                                FROM Client 
+                                LEFT JOIN family_size 
+                                ON Client.CID = family_size.CID
+                               """)
+       
+            pickups = cursor.fetchall()
+            return render_to_response('pantry/pickup_table.html',{ 'pickups':pickups })
+            
+        #view completed pickups
+        else:
+            if q != "":
+                cursor.execute("""
+                                SELECT CLName, CFName, BagName,PDay, Date
+                                FROM PickupTransaction
+                                JOIN Client
+                                ON Client.CID = PickupTransaction.CID
+                                WHERE PDay = %s
+                               """,[q])
+            else:
+                cursor.execute("""
+                                SELECT CLName, CFName, BagName, PDay, Date
+                                FROM PickupTransaction
+                                JOIN Client
+                                ON Client.CID = PickupTransaction.CID
+                               """)
+            pickups = cursor.fetchall()
+            return render_to_response('pantry/completed_pickup_table.html',{ 'pickups':pickups })
+        
+
+    cursor = connection.cursor()
+    cursor.execute("""
+                    CREATE VIEW if not exists family_size AS 
+                    SELECT CID, COUNT(CID) AS Size
+                    FROM FamilyMember
+                    GROUP BY CID;
+                   """)
+    cursor.execute("""
+                    SELECT CLName, CFName, ifnull(Size,0)+1, Apt, Street, City, State, Zip, CPhone, PDay
+                    FROM Client 
+                    LEFT JOIN family_size 
+                    ON Client.CID = family_size.CID
+                   """)
+    pickups = cursor.fetchall()
+    return render(request, 'pantry/pickup_list.html',{
+        'pickups':pickups
+    })
 
 
     

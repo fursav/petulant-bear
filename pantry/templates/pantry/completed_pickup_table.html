@@ -1,0 +1,19 @@
+<table>
+    <tr>
+        <th>Last Name</th>
+        <th>First Name</th>
+        <th>Bag Type</th>
+        <th>Pickup Day</th>
+        <th>Date of Pickup</th>
+    </tr>
+
+{% for pickup in pickups %}
+    <tr>
+        <td>{{pickup.0}}</td>
+        <td>{{pickup.1}}</td>
+        <td>{{pickup.2}}</td>
+        <td>{{pickup.3}}</td>
+        <td>{{pickup.4}}</td>
+    </tr>
+{% endfor %}
+</table>
