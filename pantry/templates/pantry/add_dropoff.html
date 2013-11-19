@@ -5,7 +5,11 @@ Add Drop Off
 {% endblock %}
 
 {% block content %}
-
+<script>
+$(function() {
+    $("#id_date").datepicker({ dateFormat: "yy-mm-dd" });
+});
+</script>
 <form action="" method="post">
 <div class="field">
 {% csrf_token %}

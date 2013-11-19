@@ -5,7 +5,9 @@ Dropoff List
 {% endblock %}
 
 {% block content %}
+<div>
 <a href="{% url 'pantry:add_dropoff' %}">Add DropOff</a>
+</div><br>
 <div id="dropoff_list">
 {% include "dropoff_table.html" %}
 

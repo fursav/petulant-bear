@@ -65,3 +65,6 @@ label
     margin:0px auto;
 }
 
+div.ui-datepicker{
+ font-size:12px;
+}
