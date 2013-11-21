@@ -19,14 +19,18 @@ class CreateProductForm(forms.Form):
 	
 
 class AddDropOffForm(forms.Form):
-	cursor = connection.cursor()
-	cursor.execute("SELECT ProductName FROM Product")
-	names = cursor.fetchall()
-	print names 
-	names = [(x[0],x[0]) for x in names]
-	product_name = forms.ChoiceField(choices = names)
-	quantity = forms.IntegerField()
-	date = forms.DateField(initial=datetime.date.today())
+
+    def __init__(self, *args, **kwargs):
+        cursor = connection.cursor()
+        cursor.execute("SELECT ProductName FROM Product")
+        names = cursor.fetchall()
+        names = [(x[0],x[0]) for x in names]
+        super(AddDropOffForm, self).__init__(*args, **kwargs)
+        self.fields['product_name'] = forms.ChoiceField(
+            choices=names )
+    product_name = forms.ChoiceField(choices = [])
+    quantity = forms.IntegerField()
+    date = forms.DateField(initial=datetime.date.today())
 
 
 class CreateClientForm(forms.Form):
@@ -208,20 +212,20 @@ def view_bag(request, BagName):
 	
 
 def add_dropoff(request):
-	if request.method == 'POST': # If the form has been submitted...
-		form = AddDropOffForm(request.POST) # A form bound to the POST data
-		if form.is_valid(): # All validation rules pass
-			product_name = form.cleaned_data['product_name']
-			quantity = form.cleaned_data['quantity']
-			date = form.cleaned_data['date']
-			cursor = connection.cursor()
-			cursor.execute("INSERT INTO DropOffTransaction(ProductName, Quantity, Date) VALUES (%s, %s, %s)", [product_name, quantity, date])
-			transaction.commit_unless_managed()
+    if request.method == 'POST': # If the form has been submitted...
+	    form = AddDropOffForm(request.POST) # A form bound to the POST data
+	    if form.is_valid(): # All validation rules pass
+		    product_name = form.cleaned_data['product_name']
+		    quantity = form.cleaned_data['quantity']
+		    date = form.cleaned_data['date']
+		    cursor = connection.cursor()
+		    cursor.execute("INSERT INTO DropOffTransaction(ProductName, Quantity, Date) VALUES (%s, %s, %s)", [product_name, quantity, date])
+		    transaction.commit_unless_managed()
 
-			return HttpResponseRedirect(reverse('pantry:dropoff_list'))
-	else:
-		form = AddDropOffForm() # An unbound form
-		return render(request, 'pantry/add_dropoff.html', {'form': form,})
+		    return HttpResponseRedirect(reverse('pantry:dropoff_list'))
+    else:
+        form = AddDropOffForm() # An unbound form
+        return render(request, 'pantry/add_dropoff.html', {'form': form,})
 
 
 def create_product(request):
