@@ -1,12 +1,15 @@
 {% extends "base.html" %}
 
 {% block pagetitle %}
-Product List
+{{BagName}} Bag
 {% endblock %}
 
 {% block content %}
+<div> 
+    <a href="{% url 'pantry:add_to_bag' BagName %}">Add Product</a>
 
-
+</div>
+<br>
 <div id="bag_product_list">
 {% include "bag_product_table.html" %}
 

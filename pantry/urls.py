@@ -15,5 +15,6 @@ urlpatterns = patterns('',
     url(r'^clients/$', views.view_clients, name= 'client_list'),
     url(r'^clients/add_client/$', views.add_client, name='add_client'),
     url(r'^pickups/$', views.view_pickups, name= 'pickup_list'),
-	url(r'^bags/(?P<BagName>[-\w\ ]+)/$', views.view_bag, name= 'bag_product_list')
+	url(r'^bags/(?P<BagName>[-\w\ ]+)/$', views.view_bag, name= 'bag_product_list'),
+	url(r'^bags/(?P<BagName>[-\w\ ]+)/add_to_bag/$', views.add_to_bag, name= 'add_to_bag')
 )

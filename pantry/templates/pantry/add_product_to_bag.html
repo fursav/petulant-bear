@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block pagetitle %}
+Add Product to {{BagName}} Bag
+{% endblock %}
+
+{% block content %}
+<form action="" method="post">
+<div class="field">
+{% csrf_token %}
+{{ form.as_p }}
+<input type="submit" value="Add Product" />
+</div>
+</form>
+
+{% endblock %}

@@ -29,8 +29,37 @@ class AddDropOffForm(forms.Form):
         self.fields['product_name'] = forms.ChoiceField(
             choices=names )
     product_name = forms.ChoiceField(choices = [])
-    quantity = forms.IntegerField()
+    quantity = forms.IntegerField(1000,1)
     date = forms.DateField(initial=datetime.date.today())
+    
+
+class AddToBagForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        cursor = connection.cursor()
+        try:
+            cursor.execute("""
+                            SELECT ProductName 
+                            FROM Product
+                            WHERE ProductName 
+                            NOT IN (
+                                SELECT ProductName 
+                                FROM Holds 
+                                WHERE BagName= %s)
+                                """,[kwargs['initial']['BagName']])
+        except:
+            cursor.execute("""
+                            SELECT ProductName 
+                            FROM Product
+                            """)
+        names = cursor.fetchall()
+        names = [(x[0],x[0]) for x in names]
+        super(AddToBagForm, self).__init__(*args, **kwargs)
+        self.fields['product_name'] = forms.ChoiceField(
+            choices=names )
+    product_name = forms.ChoiceField(choices = [])
+    quantity = forms.IntegerField(1000,1)
+    
 
 
 class CreateClientForm(forms.Form):
@@ -205,11 +234,32 @@ def view_bag(request, BagName):
 	cursor.execute("""
 					SELECT ProductName, CurrentMnthQty as Quantity
 					FROM Holds 
-					WHERE BagName = %s;
+					WHERE BagName = %s
 					""",[BagName])
 	bag = cursor.fetchall()
-	return render(request, 'pantry/bag.html', {'bag':bag})
-	
+	return render(request, 'pantry/bag.html', {'bag':bag, 'BagName':BagName})
+
+def add_to_bag(request,BagName):
+    if request.method == 'POST': # If the form has been submitted...
+        form = AddToBagForm(request.POST) # A form bound to the POST data
+        if form.is_valid(): # All validation rules pass
+            product_name = form.cleaned_data['product_name']
+            quantity = form.cleaned_data['quantity']
+            cursor = connection.cursor()
+            cursor.execute("""
+                            INSERT INTO Holds
+                            VALUES (%s, %s, %s, %s)
+                            """, [product_name, BagName, quantity,0])
+    #		    cursor.execute("""
+    #		                    UPDATE Holds
+    #		                    SET LastMnthQty = (SELECT CurrentMnthQty FROM Holds WHERE BagName = %s)
+    #		                    WHERE BagName = %s
+    #		                    """, [BagName])
+            transaction.commit_unless_managed()
+            return redirect('pantry:bag_product_list',BagName=BagName)
+    else:
+        form = AddToBagForm(initial={'BagName':BagName}) # An unbound form
+    return render(request, 'pantry/add_product_to_bag.html', {'form': form, 'BagName': BagName})
 
 def add_dropoff(request):
     if request.method == 'POST': # If the form has been submitted...
