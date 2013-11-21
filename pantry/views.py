@@ -17,16 +17,17 @@ class CreateProductForm(forms.Form):
     cost = forms.DecimalField(decimal_places = 2)
     source = forms.CharField(max_length = 100)
 	
-######
+
 class AddDropOffForm(forms.Form):
 	cursor = connection.cursor()
 	cursor.execute("SELECT ProductName FROM Product")
 	names = cursor.fetchall()
+	print names 
 	names = [(x[0],x[0]) for x in names]
 	product_name = forms.ChoiceField(choices = names)
 	quantity = forms.IntegerField()
 	date = forms.DateField(initial=datetime.date.today())
-########
+
 
 class CreateClientForm(forms.Form):
 	cursor = connection.cursor()
@@ -195,7 +196,16 @@ def view_bags(request):
         'bags':bags
     })
 
-################################################## Hannah's work 
+def view_bag(request, BagName):
+	cursor = connection.cursor()
+	cursor.execute("""
+					SELECT ProductName, CurrentMnthQty as Quantity
+					FROM Holds 
+					WHERE BagName = %s;
+					""",[BagName])
+	bag = cursor.fetchall()
+	return render(request, 'pantry/bag.html', {'bag':bag})
+	
 
 def add_dropoff(request):
 	if request.method == 'POST': # If the form has been submitted...
@@ -212,7 +222,7 @@ def add_dropoff(request):
 	else:
 		form = AddDropOffForm() # An unbound form
 		return render(request, 'pantry/add_dropoff.html', {'form': form,})
-###############################################################################
+
 
 def create_product(request):
     if request.method == 'POST': # If the form has been submitted...
