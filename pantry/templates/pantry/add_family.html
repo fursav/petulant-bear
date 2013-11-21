@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block pagetitle %}
+Add Family Members
+{% endblock %}
+
+{% block content %}
+
+<div class="ui-widget">
+	<a href="{% url 'pantry:client_list' %}">Done Adding</a>
+</div><br>
+<div class="field">
+<form action="" method="post">
+{% csrf_token %}
+{{ form.as_p }}
+<input type="submit" value="Add Member" />
+</form>
+</div>
+
+{% endblock %}

@@ -8,6 +8,8 @@ from django.template import RequestContext
 import datetime
 # Create your views here.
 
+#client_reference_id = -1
+
 class LoginForm(forms.Form):
     username = forms.CharField(max_length=30)
     password= forms.CharField(max_length=30, widget=forms.PasswordInput)
@@ -81,6 +83,12 @@ class CreateClientForm(forms.Form):
 	state = forms.CharField(max_length= 100)
 	zip = forms.CharField(max_length= 100)
 	bag_name = forms.ChoiceField(choices = names)
+	
+class AddFamilyMemberForm(forms.Form):
+	first_name = forms.CharField(max_length= 100)
+	last_name = forms.CharField(max_length= 100)
+	gender = forms.CharField(max_length= 12)
+	DOB = forms.DateField() 
 
 def index(request):
     if request.method == 'POST': # If the form has been submitted...
@@ -346,13 +354,14 @@ def add_client(request):
 				print topCID[0]
 				cursor.execute("INSERT INTO Client VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)", 
 				[(topCID[0]+1), first_name, last_name, phone, gender, DOB, start, pDay, apt, street, city, state, zip, bag_name])
-            
+				#client_reference_id = topCID[0] + 1
+				#print client_reference_id
                 #need this line after altering database in django 1.5
 				transaction.commit_unless_managed()
 			except IntegrityError:
 				return render(request, 'pantry/add_client.html', {'form': form, 'error_message':'Client already exists'})
             #return redirect('pantry:product_list', kwargs={"success_message":smsg})
-			return HttpResponseRedirect(reverse('pantry:client_list'))
+			return HttpResponseRedirect(reverse('pantry:add_family'))
 	else:
 		form = CreateClientForm() # An unbound form
 	return render(request, 'pantry/add_client.html', {'form': form,})
@@ -423,5 +432,30 @@ def view_pickups(request):
         'pickups':pickups
     })
 
+def add_family_member(request):
+	if request.method == 'POST': # If the form has been submitted...
+		form = AddFamilyMemberForm(request.POST) # A form bound to the POST data
+		if form.is_valid(): # All validation rules pass
+			first_name = form.cleaned_data['first_name']
+			last_name = form.cleaned_data['last_name']
+			gender = form.cleaned_data['gender']
+			DOB = form.cleaned_data['DOB']
+			cursor = connection.cursor()
+            
+			try:
+				cursor.execute("SELECT CID FROM Client ORDER BY CID desc")
+				topCID = cursor.fetchone()				
+				cursor.execute("INSERT INTO FamilyMember VALUES (%s,%s,%s,%s,%s)", 
+				[topCID[0], first_name, last_name, DOB, gender])
+				
+                #need this line after altering database in django 1.5
+				transaction.commit_unless_managed()
+			except IntegrityError:
+				return render(request, 'pantry/add_family.html', {'form': form, 'error_message':'Family member already exists'})
+            #return redirect('pantry:product_list', kwargs={"success_message":smsg})
+			return HttpResponseRedirect(reverse('pantry:add_family'))
+	else:
+		form = AddFamilyMemberForm() # An unbound form
+	return render(request, 'pantry/add_family.html', {'form': form,})
 
     
