@@ -1,0 +1,27 @@
+<table>
+    <tr>
+        <th>Product Name</th>
+        <th>Quantity</th>
+        <th>Last Month Quantity</th>
+        <th>Remove?</th>
+    </tr>
+
+{% for product in bag %}
+    <tr>
+        <td>{{product.0}}</td>
+        <td><input type="number" class="inputspin"  name="qty_{{product.0}}" value="{{product.1}}" min="0" max="200" /></td>
+        <td>{{product.2}}</td>
+        <td><label for='{{product.0}}'>Remove</label><input type="checkbox" id='{{product.0}}' name="remove_product" value='{{product.0}}'></td>
+    </tr>
+    
+{% endfor %}
+    <!--{{ formset.management_form }}
+    {% for form in formset %}
+    <tr>
+        {% for field in form %}
+        <td>{{ field }}</td>
+        
+        {% endfor %}
+    </tr>
+    {% endfor %}-->
+</table>

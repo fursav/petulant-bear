@@ -5,10 +5,12 @@
 {% endblock %}
 
 {% block content %}
+{% if not disabled %}
 <div> 
-    <a href="{% url 'pantry:add_to_bag' BagName %}">Add Product</a>
-
+    <a href="{% url 'pantry:add_to_bag' BagName %}">Add Product</a><br><br>
+    <a href="{% url 'pantry:edit_bag' BagName %}">Edit Bag</a>
 </div>
+{% endif %}
 <br>
 <div id="bag_product_list">
 {% include "bag_product_table.html" %}

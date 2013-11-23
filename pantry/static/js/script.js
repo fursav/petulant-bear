@@ -1,7 +1,8 @@
 
 
 function styleUI() {
-    $( "button, input:submit, a" ).button();
+    $( "button, input:submit, a,input:checkbox" ).button();
+    $(".inputspin").spinner();
     
     $("table th").each(function(){
  

@@ -5,7 +5,8 @@ from django import forms
 from django.db import connection, transaction, IntegrityError
 from django.core import serializers
 from django.template import RequestContext
-import datetime
+from django.forms.formsets import formset_factory
+import datetime, calendar
 # Create your views here.
 
 #client_reference_id = -1
@@ -120,8 +121,42 @@ def index(request):
     })
 
 def home(request):
-    
-    return render(request, 'pantry/home.html')
+    stats = {'Most requested products':[],'Most expensive products':[],
+             'Most used sources':[],'Most in stock products':[]}
+    cursor = connection.cursor()
+    cursor.execute("""
+                    SELECT ProductName, SUM(CurrentMnthQty) 
+                    FROM Holds 
+                    GROUP by ProductName
+                    ORDER by SUM(CurrentMnthQty) DESC
+                    """)
+    for i in range(5):        
+        stats["Most requested products"].append(cursor.fetchone())
+    cursor.execute("""
+                    SELECT ProductName, Cost
+                    FROM Product 
+                    ORDER BY Cost DESC
+                    """)
+    for i in range(5):        
+        stats["Most expensive products"].append(cursor.fetchone())
+    cursor.execute("""
+                    SELECT SourceName, Sum(Quantity)
+                    FROM Product
+                    NATURAL JOIN DropOffTransaction
+                    GROUP BY SourceName
+                    ORDER BY SUM(Quantity) DESC
+                    """)
+    for i in range(5):        
+        stats["Most used sources"].append(cursor.fetchone())
+        
+    cursor.execute("""
+                    SELECT ProductName, QoH
+                    FROM QtyOnHand
+                    ORDER BY QoH DESC
+                    """)
+    for i in range(5):        
+        stats["Most in stock products"].append(cursor.fetchone())
+    return render(request, 'pantry/home.html',{'stats':stats,})
     
 def view_products(request):
     if request.is_ajax():
@@ -245,7 +280,65 @@ def view_bag(request, BagName):
 					WHERE BagName = %s
 					""",[BagName])
 	bag = cursor.fetchall()
-	return render(request, 'pantry/bag.html', {'bag':bag, 'BagName':BagName})
+	
+	#only allow editing at the end of the month
+	disabled = False
+	#d = datetime.date.today()
+	#if d.day != calendar.monthrange(d.year,d.month)[1]:
+	#    disabled = True
+	return render(request, 'pantry/bag.html', {'bag':bag, 'BagName':BagName, 'disabled':disabled})
+	
+def edit_bag(request, BagName):
+    if request.method == 'POST':
+        params = request.POST
+        
+        #update last month qty
+        cursor = connection.cursor()
+        cursor.execute("""
+	                    UPDATE Holds
+	                    SET LastMnthQty = (SELECT CurrentMnthQty FROM Holds WHERE BagName = %s)
+	                    WHERE BagName = %s
+	                    """, [BagName,BagName])
+        transaction.commit_unless_managed()
+        #update current month qty
+        for k,v in params.iteritems():
+            if k.startswith('qty_'):
+                pname= k[4:]
+                cursor.execute("""
+					        UPDATE Holds
+    	                    SET CurrentMnthQty = %s
+    		                WHERE BagName = %s
+    		                AND ProductName = %s
+					        """,[v,BagName,pname])
+                transaction.commit_unless_managed()
+                
+                
+        #delete products
+        removed_products = params.getlist("remove_product")
+        for pname in removed_products:
+            print pname
+            cursor = connection.cursor()
+            cursor.execute("""
+					        DELETE FROM Holds
+					        WHERE BagName = %s
+					        AND ProductName = %s
+					        """,[BagName,pname])
+            transaction.commit_unless_managed()
+            
+        return redirect('pantry:bag_product_list',BagName=BagName)
+    else:
+        #ass
+        #print request
+	    cursor = connection.cursor()
+	    cursor.execute("""
+					    SELECT ProductName, CurrentMnthQty as Quantity, LastMnthQty
+					    FROM Holds 
+					    WHERE BagName = %s
+					    """,[BagName])
+	    bag = cursor.fetchall()
+	    
+	    #formset = AddFormSet()
+    return render(request, 'pantry/edit_bag.html', {'bag':bag, 'BagName':BagName})
 
 def add_to_bag(request,BagName):
     if request.method == 'POST': # If the form has been submitted...
@@ -258,11 +351,7 @@ def add_to_bag(request,BagName):
                             INSERT INTO Holds
                             VALUES (%s, %s, %s, %s)
                             """, [product_name, BagName, quantity,0])
-    #		    cursor.execute("""
-    #		                    UPDATE Holds
-    #		                    SET LastMnthQty = (SELECT CurrentMnthQty FROM Holds WHERE BagName = %s)
-    #		                    WHERE BagName = %s
-    #		                    """, [BagName])
+
             transaction.commit_unless_managed()
             return redirect('pantry:bag_product_list',BagName=BagName)
     else:
@@ -283,7 +372,7 @@ def add_dropoff(request):
 		    return HttpResponseRedirect(reverse('pantry:dropoff_list'))
     else:
         form = AddDropOffForm() # An unbound form
-        return render(request, 'pantry/add_dropoff.html', {'form': form,})
+    return render(request, 'pantry/add_dropoff.html', {'form': form,})
 
 
 def create_product(request):
