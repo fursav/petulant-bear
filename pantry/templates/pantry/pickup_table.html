@@ -6,6 +6,7 @@
         <th>Address</th>
         <th>Telephone</th>
         <th>Pickup Day</th>
+        <th>Sign in</th>
     </tr>
 
 {% for pickup in pickups %}
@@ -16,6 +17,7 @@
         <td>{{pickup.3}} {{pickup.4}}, {{pickup.5}}, {{pickup.6}}, {{pickup.7}}</td>
         <td>{{pickup.8}}</td>
         <td>{{pickup.9}}</td>
+        <td><a href="{% url 'pantry:complete_pickup' pickup.10 %}">Sign In</a></td>
     </tr>
 {% endfor %}
 </table>

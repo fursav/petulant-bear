@@ -465,7 +465,7 @@ def view_pickups(request):
         if tt == "scheduled":        
             if q != "":
                     cursor.execute("""
-                                    SELECT CLName, CFName, ifnull(Size,0)+1, Apt, Street, City, State, Zip, CPhone, PDay
+                                    SELECT CLName, CFName, ifnull(Size,0)+1, Apt, Street, City, State, Zip, CPhone, PDay, Client.CID
                                     FROM Client 
                                     LEFT JOIN family_size 
                                     ON Client.CID = family_size.CID
@@ -473,7 +473,7 @@ def view_pickups(request):
                                    """,[q])
             else:
                 cursor.execute("""
-                                SELECT CLName, CFName, ifnull(Size,0)+1, Apt, Street, City, State, Zip, CPhone, PDay
+                                SELECT CLName, CFName, ifnull(Size,0)+1, Apt, Street, City, State, Zip, CPhone, PDay, Client.CID
                                 FROM Client 
                                 LEFT JOIN family_size 
                                 ON Client.CID = family_size.CID
@@ -511,7 +511,7 @@ def view_pickups(request):
                     GROUP BY CID;
                    """)
     cursor.execute("""
-                    SELECT CLName, CFName, ifnull(Size,0)+1, Apt, Street, City, State, Zip, CPhone, PDay
+                    SELECT CLName, CFName, ifnull(Size,0)+1, Apt, Street, City, State, Zip, CPhone, PDay, Client.CID
                     FROM Client 
                     LEFT JOIN family_size 
                     ON Client.CID = family_size.CID
@@ -519,6 +519,51 @@ def view_pickups(request):
     pickups = cursor.fetchall()
     return render(request, 'pantry/pickup_list.html',{
         'pickups':pickups
+    })
+    
+def complete_pickup(request,cid):
+
+    cursor = connection.cursor()
+    
+    #user has clicked confirm pickup
+    if request.method == 'POST':
+    
+        cursor.execute("""
+                        INSERT INTO PickupTransaction
+                        VALUES(null,%s,%s)
+                        """,[cid,datetime.date.today()])
+        transaction.commit_unless_managed()
+        
+        return HttpResponseRedirect(reverse('pantry:pickup_list'))
+    
+    
+    cursor.execute("""
+                    SELECT BagName
+				    FROM Client
+				    WHERE CID = %s
+				    """,[cid])
+    bag_name = cursor.fetchone()[0]
+    
+    cursor.execute("""
+					SELECT ProductName, CurrentMnthQty as Quantity
+					FROM Holds 
+					WHERE BagName = %s
+					""",[bag_name])
+    bag = cursor.fetchall()
+	
+    cursor.execute("""
+					SELECT CFName,CLName
+					FROM Client
+					WHERE CID = %s
+					""",[cid])
+					
+    temp = cursor.fetchone()
+    name = temp[0] + " " + temp[1]
+    return render(request, 'pantry/complete_pickup.html',{
+        'bag':bag,
+        'name':name,
+        'bag_name':bag_name,
+        'date':datetime.date.today()
     })
 
 def add_family_member(request):
