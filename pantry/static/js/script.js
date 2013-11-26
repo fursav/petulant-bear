@@ -2,6 +2,7 @@
 
 function styleUI() {
     $( "button, input:submit, a,input:checkbox" ).button();
+    $(".radio_set").buttonset();
     $(".inputspin").spinner();
     
     $("table th").each(function(){

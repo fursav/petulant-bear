@@ -20,4 +20,5 @@ urlpatterns = patterns('',
 	url(r'^bags/(?P<BagName>[-\w\ ]+)/$', views.view_bag, name= 'bag_product_list'),
 	url(r'^bags/(?P<BagName>[-\w\ ]+)/add_to_bag/$', views.add_to_bag, name= 'add_to_bag'),
 	url(r'^bags/(?P<BagName>[-\w\ ]+)/edit_bag/$', views.edit_bag, name= 'edit_bag'),
+	url(r'^reports/$', views.view_reports, name= 'reports'),
 )

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block pagetitle %}
+Reports
+{% endblock %}
+
+{% block content %}
+<script>
+$(document).ready(function() {
+    
+    $("#report_type").buttonset();  
+    /*$('input[name=tt]').change(function(){
+
+        searchPickups();
+
+   });*/
+});
+
+
+
+</script>
+
+<div class="ui-widget">
+<span id="report_type">
+    <input type="radio" name="rt" value="service" id="radio1" checked="checked"><label for="radio1">Service Report</label>
+    <input type="radio" name="rt" value="grocery" id="radio2"><label for="radio2">Grocery Report</label>
+</span>
+</div><br>
+<div id="report_div">
+{% include "service_report_table.html" %}
+
+</div>
+{% endblock %}

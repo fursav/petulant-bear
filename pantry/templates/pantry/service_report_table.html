@@ -1,0 +1,29 @@
+<div id="report_month" style="text-align:center;" >
+    <input type="radio" name="rm" value="active" id="radiom1" checked="checked"><label for="radiom1">Active MSR</label>
+    <input type="radio" name="rm" value="last_month" id="radiom2"><label for="radiom2">Last Month MSR</label>
+</div><br>
+<table>
+    <tr>
+        <th>Week</th>
+        <th># of Households</th>
+        <th>Under 18</th>
+        <th>18-64</th>
+        <th>65 and older</th>
+        <th>Total people</th>
+        <th>Food Cost ($)</th>
+    </tr>
+
+{% for row in data %}
+    <tr>
+        {% for col in row %}
+            <td>{{col}}</td>
+        {% endfor %}
+    </tr>
+{% endfor %}
+    <tr>
+        <td>Totals</td>
+        {% for col in totals %}
+            <td>{{col}}</td>
+        {% endfor %}
+    </tr>
+</table>
