@@ -7,7 +7,7 @@ Reports
 {% block content %}
 <script>
 $(document).ready(function() {
-    
+    $('input[name=rm]').click(function(){changeTable();});
     $("#report_type").buttonset();  
     /*$('input[name=tt]').change(function(){
 
@@ -16,6 +16,14 @@ $(document).ready(function() {
    });*/
 });
 
+function changeTable() {
+    rm = $('input[name=rm]:checked').val()
+    $.get( "{% url 'pantry:reports' %}",{"rm":rm}).done(function( data ) {
+        //alert( "Data Loaded: " + data );
+        $("#report_div").html(data);
+        styleUI();
+    });;    
+}
 
 
 </script>
@@ -25,6 +33,11 @@ $(document).ready(function() {
     <input type="radio" name="rt" value="service" id="radio1" checked="checked"><label for="radio1">Service Report</label>
     <input type="radio" name="rt" value="grocery" id="radio2"><label for="radio2">Grocery Report</label>
 </span>
+</div><br>
+
+<div id="report_month" style="text-align:center;" >
+    <input type="radio" name="rm" value="active" id="radiom1" checked="checked"><label for="radiom1">Active MSR</label>
+    <input type="radio" name="rm" value="last_month" id="radiom2"><label for="radiom2">Last Month MSR</label>
 </div><br>
 <div id="report_div">
 {% include "service_report_table.html" %}

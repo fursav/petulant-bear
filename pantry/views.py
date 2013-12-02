@@ -593,59 +593,149 @@ def add_family_member(request):
 	return render(request, 'pantry/add_family.html', {'form': form,})
 	
 def view_reports(request):
-
-    cursor = connection.cursor()
-    cursor.execute("""
-                    CREATE VIEW if not exists PickupClient AS
-                    SELECT c.CID, CASE
-                     	 WHEN c.DOB > date('now','-18 years') THEN 0
-                     	 WHEN c.DOB <= date('now','-18 years') AND c.DOB >= date('now','-65 years') THEN 1
-                     	 ELSE 2
-                     	 END AS agegroup,
-                     	 CASE
-                     	 WHEN PDay < 8 THEN 1
-                     	 WHEN PDay >= 8 AND PDay < 15 THEN 2
-                     	 WHEN PDay >= 15 AND PDay < 22 THEN 3
-                     	 WHEN PDay >= 22 AND PDay < 29 THEN 4
-                     	 ELSE 5
-                     	 END AS week,PDay,Cost1
-                    FROM(
-                    SELECT CID, DOB FROM familyMember
-                    UNION ALL
-                    SELECT CID, DOB FROM Client) as c
-                    JOIN Client
-                    JOIN bag_cost 
-                    WHERE c.CID = Client.CID AND bag_cost.BagName = Client.BagName
-                    ORDER BY Week;
-                    """)
-    cursor.execute("""
-                    CREATE VIEW if not exists almost AS
-                    SELECT week, count(Distinct CID) as num_households,
-                        (CASE WHEN agegroup = 0 THEN count(CID) ELSE 0 END) AS [u18],
-                        (CASE WHEN agegroup = 1 THEN count(CID) ELSE 0 END) AS [18-64],
-                        (CASE WHEN agegroup = 2 THEN count(CID) ELSE 0 END) AS [65+],
-                        count(CID) AS [Total People]
-                    FROM Pickupclient
-                    GROUP BY week;
-                    """)
-    cursor.execute("""
-                    CREATE VIEW if not exists tot_food_cost AS
-                    SELECT week, sum(cost1) as total_cost
-                    FROM (SELECT DISTINCT CID, cost1, week FROM Pickupclient)
-                    GROUP BY week;
-                    """)
-    cursor.execute("""
-                    SELECT *
-                    FROM almost NATURAL JOIN tot_food_cost
-                    """)
-    data = cursor.fetchall()
-    cursor.execute("""
-                    SELECT sum(num_households),sum(u18),sum([18-64]),sum([65+]),
-                    sum([total people]), sum(total_cost)
-                    FROM almost NATURAL JOIN tot_food_cost;
-                    """)
-    totals = cursor.fetchone()
-    return render(request, 'pantry/reports.html', {'data': data, 'totals':totals})
+	cursor = connection.cursor()
+	if request.is_ajax():
+		rm = request.GET.get('rm')
+		print(rm)
+		if rm == "active":
+			cursor.execute("""
+							CREATE VIEW if not exists PickupClient AS
+							SELECT c.CID, CASE
+							  WHEN c.DOB > date('now','-18 years') THEN 0
+							  WHEN c.DOB <= date('now','-18 years') AND c.DOB >= date('now','-65 years') THEN 1
+							  ELSE 2
+							  END AS agegroup,
+							  CASE
+							  WHEN PDay < 8 THEN 1
+							  WHEN PDay >= 8 AND PDay < 15 THEN 2
+							  WHEN PDay >= 15 AND PDay < 22 THEN 3
+							  WHEN PDay >= 22 AND PDay < 29 THEN 4
+							  ELSE 5
+							  END AS week,PDay,Cost1, PickupTransaction.date
+							FROM(
+							SELECT CID, DOB FROM familyMember
+							UNION ALL
+							SELECT CID, DOB FROM Client) as c
+							JOIN Client
+							JOIN bag_cost 
+							JOIN PickupTransaction
+							WHERE c.CID = Client.CID AND bag_cost.BagName = Client.BagName AND c.CID = PickupTransaction.CID AND strftime('%m',Date) = strftime('%m',date('now'))
+							ORDER BY Week;
+							""")
+		elif rm == "last_month":
+			cursor.execute("""
+							CREATE VIEW if not exists PickupClient AS
+							SELECT c.CID, CASE
+							  WHEN c.DOB > date('now','-18 years') THEN 0
+							  WHEN c.DOB <= date('now','-18 years') AND c.DOB >= date('now','-65 years') THEN 1
+							  ELSE 2
+							  END AS agegroup,
+							  CASE
+							  WHEN PDay < 8 THEN 1
+							  WHEN PDay >= 8 AND PDay < 15 THEN 2
+							  WHEN PDay >= 15 AND PDay < 22 THEN 3
+							  WHEN PDay >= 22 AND PDay < 29 THEN 4
+							  ELSE 5
+							  END AS week,PDay,Cost1, PickupTransaction.date
+							FROM(
+							SELECT CID, DOB FROM familyMember
+							UNION ALL
+							SELECT CID, DOB FROM Client) as c
+							JOIN Client
+							JOIN bag_cost 
+							JOIN PickupTransaction
+							WHERE c.CID = Client.CID AND bag_cost.BagName = Client.BagName AND c.CID = PickupTransaction.CID AND strftime('%m',Date) = strftime('%m',date('now','-1 months'))
+							ORDER BY Week;
+							""")
+		cursor.execute("""
+				CREATE VIEW if not exists almost as
+				SELECT pickupclient.week, count(Distinct CID) as [num_households],
+					(CASE WHEN a.nums IS NULL THEN 0 ELSE a.nums END) AS [u18],
+					(CASE WHEN b.nums IS NULL THEN 0 ELSE b.nums END) AS [18-64],
+					(CASE WHEN c.nums IS NULL THEN 0 ELSE c.nums END) AS [65+],
+					count(CID) AS [Total People]
+				FROM Pickupclient
+				LEFT JOIN a on pickupclient.week = a.week 
+				LEFT JOIN b on pickupclient.week = b.week
+				LEFT JOIN c on pickupclient.week = c.week
+				GROUP BY pickupclient.week
+				""")
+		cursor.execute("""
+						CREATE VIEW if not exists tot_food_cost AS
+						SELECT week, sum(cost1) as total_cost
+						FROM (SELECT DISTINCT CID, cost1, week FROM Pickupclient)
+						GROUP BY week;
+						""")
+		cursor.execute("""
+						SELECT *
+						FROM almost NATURAL JOIN tot_food_cost
+						""")
+		data = cursor.fetchall()
+		cursor.execute("""
+						SELECT sum(num_households),sum(u18),sum([18-64]),sum([65+]),
+						sum([total people]), sum(total_cost)
+						FROM almost NATURAL JOIN tot_food_cost;
+						""")
+		totals = cursor.fetchone()
+		cursor.execute("DROP VIEW PickupClient")
+		return render(request, 'pantry/service_report_table.html', {'data': data, 'totals':totals})
+	else:
+		cursor.execute("""
+						CREATE VIEW if not exists PickupClient AS
+						SELECT c.CID, CASE
+						  WHEN c.DOB > date('now','-18 years') THEN 0
+						  WHEN c.DOB <= date('now','-18 years') AND c.DOB >= date('now','-65 years') THEN 1
+						  ELSE 2
+						  END AS agegroup,
+						  CASE
+						  WHEN PDay < 8 THEN 1
+						  WHEN PDay >= 8 AND PDay < 15 THEN 2
+						  WHEN PDay >= 15 AND PDay < 22 THEN 3
+						  WHEN PDay >= 22 AND PDay < 29 THEN 4
+						  ELSE 5
+						  END AS week,PDay,Cost1, PickupTransaction.date
+						FROM(
+						SELECT CID, DOB FROM familyMember
+						UNION ALL
+						SELECT CID, DOB FROM Client) as c
+						JOIN Client
+						JOIN bag_cost 
+						JOIN PickupTransaction
+						WHERE c.CID = Client.CID AND bag_cost.BagName = Client.BagName AND c.CID = PickupTransaction.CID AND strftime('%m',Date) = strftime('%m',date('now'))
+						ORDER BY Week;
+						""")
+		cursor.execute("""
+						CREATE VIEW if not exists almost as
+						SELECT pickupclient.week, count(Distinct CID) as [num_households],
+							(CASE WHEN a.nums IS NULL THEN 0 ELSE a.nums END) AS [u18],
+							(CASE WHEN b.nums IS NULL THEN 0 ELSE b.nums END) AS [18-64],
+							(CASE WHEN c.nums IS NULL THEN 0 ELSE c.nums END) AS [65+],
+							count(CID) AS [Total People]
+						FROM Pickupclient
+						LEFT JOIN a on pickupclient.week = a.week 
+						LEFT JOIN b on pickupclient.week = b.week
+						LEFT JOIN c on pickupclient.week = c.week
+						GROUP BY pickupclient.week
+						""")
+		cursor.execute("""
+						CREATE VIEW if not exists tot_food_cost AS
+						SELECT week, sum(cost1) as total_cost
+						FROM (SELECT DISTINCT CID, cost1, week FROM Pickupclient)
+						GROUP BY week;
+						""")
+		cursor.execute("""
+						SELECT *
+						FROM almost NATURAL JOIN tot_food_cost
+						""")
+		data = cursor.fetchall()
+		cursor.execute("""
+						SELECT sum(num_households),sum(u18),sum([18-64]),sum([65+]),
+						sum([total people]), sum(total_cost)
+						FROM almost NATURAL JOIN tot_food_cost;
+						""")
+		totals = cursor.fetchone()
+		cursor.execute("DROP VIEW PickupClient")
+		return render(request, 'pantry/reports.html', {'data': data, 'totals':totals})
     
 
     
