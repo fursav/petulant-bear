@@ -594,94 +594,125 @@ def add_family_member(request):
 	return render(request, 'pantry/add_family.html', {'form': form,})
 	
 def view_reports(request):
-	cursor = connection.cursor()	
-	cursor.execute("DROP VIEW if exists PickupClient")
-	if request.is_ajax():
-		rm = request.GET.get('rm')
-		print(rm)
-		if rm == "active":
-			cursor.execute("""
-							CREATE VIEW if not exists PickupClient AS
-							SELECT c.CID, CASE
-							  WHEN c.DOB > date('now','-18 years') THEN 0
-							  WHEN c.DOB <= date('now','-18 years') AND c.DOB >= date('now','-65 years') THEN 1
-							  ELSE 2
-							  END AS agegroup,
-							  CASE
-							  WHEN PDay < 8 THEN 1
-							  WHEN PDay >= 8 AND PDay < 15 THEN 2
-							  WHEN PDay >= 15 AND PDay < 22 THEN 3
-							  WHEN PDay >= 22 AND PDay < 29 THEN 4
-							  ELSE 5
-							  END AS week,PDay,Cost1, PickupTransaction.date
-							FROM(
-							SELECT CID, DOB FROM familyMember
-							UNION ALL
-							SELECT CID, DOB FROM Client) as c
-							JOIN Client
-							JOIN bag_cost 
-							JOIN PickupTransaction
-							WHERE c.CID = Client.CID AND bag_cost.BagName = Client.BagName AND c.CID = PickupTransaction.CID AND strftime('%m',Date) = strftime('%m',date('now'))
-							ORDER BY Week;
-							""")
-		elif rm == "last_month":
-			cursor.execute("""
-							CREATE VIEW if not exists PickupClient AS
-							SELECT c.CID, CASE
-							  WHEN c.DOB > date('now','-18 years') THEN 0
-							  WHEN c.DOB <= date('now','-18 years') AND c.DOB >= date('now','-65 years') THEN 1
-							  ELSE 2
-							  END AS agegroup,
-							  CASE
-							  WHEN PDay < 8 THEN 1
-							  WHEN PDay >= 8 AND PDay < 15 THEN 2
-							  WHEN PDay >= 15 AND PDay < 22 THEN 3
-							  WHEN PDay >= 22 AND PDay < 29 THEN 4
-							  ELSE 5
-							  END AS week,PDay,Cost1, PickupTransaction.date
-							FROM(
-							SELECT CID, DOB FROM familyMember
-							UNION ALL
-							SELECT CID, DOB FROM Client) as c
-							JOIN Client
-							JOIN bag_cost 
-							JOIN PickupTransaction
-							WHERE c.CID = Client.CID AND bag_cost.BagName = Client.BagName AND c.CID = PickupTransaction.CID AND strftime('%m',Date) = strftime('%m',date('now','-1 months'))
-							ORDER BY Week;
-							""")
-		cursor.execute("""
-				CREATE VIEW if not exists almost as
-				SELECT pickupclient.week, count(Distinct CID) as [num_households],
-					(CASE WHEN a.nums IS NULL THEN 0 ELSE a.nums END) AS [u18],
-					(CASE WHEN b.nums IS NULL THEN 0 ELSE b.nums END) AS [18-64],
-					(CASE WHEN c.nums IS NULL THEN 0 ELSE c.nums END) AS [65+],
-					count(CID) AS [Total People]
-				FROM Pickupclient
-				LEFT JOIN a on pickupclient.week = a.week 
-				LEFT JOIN b on pickupclient.week = b.week
-				LEFT JOIN c on pickupclient.week = c.week
-				GROUP BY pickupclient.week
-				""")
-		cursor.execute("""
-						CREATE VIEW if not exists tot_food_cost AS
-						SELECT week, sum(cost1) as total_cost
-						FROM (SELECT DISTINCT CID, cost1, week FROM Pickupclient)
-						GROUP BY week;
-						""")
-		cursor.execute("""
-						SELECT *
-						FROM almost NATURAL JOIN tot_food_cost
-						""")
-		data = cursor.fetchall()
-		cursor.execute("""
-						SELECT sum(num_households),sum(u18),sum([18-64]),sum([65+]),
-						sum([total people]), sum(total_cost)
-						FROM almost NATURAL JOIN tot_food_cost;
-						""")
-		totals = cursor.fetchone()
-		cursor.execute("DROP VIEW PickupClient")
-		return render(request, 'pantry/service_report_table.html', {'data': data, 'totals':totals})
-	else:
+    cursor = connection.cursor()	
+    cursor.execute("DROP VIEW if exists PickupClient")
+    if request.is_ajax():
+        rm = request.GET.get('rm')
+        rt = request.GET.get('rt')
+        if rt == "service":
+            if rm == "active":
+                cursor.execute("""
+    							CREATE VIEW if not exists PickupClient AS
+    							SELECT c.CID, CASE
+    							  WHEN c.DOB > date('now','-18 years') THEN 0
+    							  WHEN c.DOB <= date('now','-18 years') AND c.DOB >= date('now','-65 years') THEN 1
+    							  ELSE 2
+    							  END AS agegroup,
+    							  CASE
+    							  WHEN PDay < 8 THEN 1
+    							  WHEN PDay >= 8 AND PDay < 15 THEN 2
+    							  WHEN PDay >= 15 AND PDay < 22 THEN 3
+    							  WHEN PDay >= 22 AND PDay < 29 THEN 4
+    							  ELSE 5
+    							  END AS week,PDay,Cost1, PickupTransaction.date
+    							FROM(
+    							SELECT CID, DOB FROM familyMember
+    							UNION ALL
+    							SELECT CID, DOB FROM Client) as c
+    							JOIN Client
+    							JOIN bag_cost 
+    							JOIN PickupTransaction
+    							WHERE c.CID = Client.CID AND bag_cost.BagName = Client.BagName AND c.CID = PickupTransaction.CID AND strftime('%m',Date) = strftime('%m',date('now'))
+    							ORDER BY Week;
+    							""")
+            elif rm == "last_month":
+                cursor.execute("""
+    							CREATE VIEW if not exists PickupClient AS
+    							SELECT c.CID, CASE
+    							  WHEN c.DOB > date('now','-18 years') THEN 0
+    							  WHEN c.DOB <= date('now','-18 years') AND c.DOB >= date('now','-65 years') THEN 1
+    							  ELSE 2
+    							  END AS agegroup,
+    							  CASE
+    							  WHEN PDay < 8 THEN 1
+    							  WHEN PDay >= 8 AND PDay < 15 THEN 2
+    							  WHEN PDay >= 15 AND PDay < 22 THEN 3
+    							  WHEN PDay >= 22 AND PDay < 29 THEN 4
+    							  ELSE 5
+    							  END AS week,PDay,Cost1, PickupTransaction.date
+    							FROM(
+    							SELECT CID, DOB FROM familyMember
+    							UNION ALL
+    							SELECT CID, DOB FROM Client) as c
+    							JOIN Client
+    							JOIN bag_cost 
+    							JOIN PickupTransaction
+    							WHERE c.CID = Client.CID AND bag_cost.BagName = Client.BagName AND c.CID = PickupTransaction.CID AND strftime('%m',Date) = strftime('%m',date('now','-1 months'))
+    							ORDER BY Week;
+    							""")
+                cursor.execute("""
+    				CREATE VIEW if not exists almost as
+    				SELECT pickupclient.week, count(Distinct CID) as [num_households],
+    					(CASE WHEN a.nums IS NULL THEN 0 ELSE a.nums END) AS [u18],
+    					(CASE WHEN b.nums IS NULL THEN 0 ELSE b.nums END) AS [18-64],
+    					(CASE WHEN c.nums IS NULL THEN 0 ELSE c.nums END) AS [65+],
+    					count(CID) AS [Total People]
+    				FROM Pickupclient
+    				LEFT JOIN a on pickupclient.week = a.week 
+    				LEFT JOIN b on pickupclient.week = b.week
+    				LEFT JOIN c on pickupclient.week = c.week
+    				GROUP BY pickupclient.week
+    				""")
+    		cursor.execute("""
+    						CREATE VIEW if not exists tot_food_cost AS
+    						SELECT week, sum(cost1) as total_cost
+    						FROM (SELECT DISTINCT CID, cost1, week FROM Pickupclient)
+    						GROUP BY week;
+    						""")
+    		cursor.execute("""
+    						SELECT *
+    						FROM almost NATURAL JOIN tot_food_cost
+    						""")
+    		data = cursor.fetchall()
+    		cursor.execute("""
+    						SELECT sum(num_households),sum(u18),sum([18-64]),sum([65+]),
+    						sum([total people]), sum(total_cost)
+    						FROM almost NATURAL JOIN tot_food_cost;
+    						""")
+    		totals = cursor.fetchone()
+    		cursor.execute("DROP VIEW PickupClient")
+    		return render(request, 'pantry/service_report_table.html', {'data': data, 'totals':totals})
+    	else: 
+    	    cursor.execute("""
+    	                    CREATE VIEW if not exists gl_now AS
+                            SELECT Client.BagName, ProductName, CurrentMnthQty as CMQ
+                            FROM Client
+                            JOIN Holds 
+                            WHERE Holds.BagName = Client.BagName;""")
+            cursor.execute("""                
+                            CREATE VIEW if not exists gl_past AS
+                            SELECT Client.BagName, ProductName, LastMnthQty as LMQ,date 
+                            FROM Pickuptransaction 
+                            JOIN Client
+                            JOIN Holds 
+                            WHERE Pickuptransaction.CID = Client.CID AND Holds.BagName = Client.BagName AND  strftime('%m',date(date)) = strftime('%m',date('now','-1 months'));""")
+
+            cursor.execute("""                
+                            CREATE VIEW if not exists groc_list AS
+                            SELECT gl_now.ProductName AS prodname, CMQ, LMQ
+                            FROM gl_now LEFT JOIN gl_past 
+                            ON gl_now.ProductName=gl_past.ProductName;""")
+
+                      
+
+            cursor.execute("""
+                            SELECT prodname AS Product, SUM(CMQ) as Quantity, SUM(ifnull(LMQ,0)) as [Last Month Quantity] 
+                            FROM groc_list
+                            GROUP BY prodname;""")
+            products = cursor.fetchall()
+            return render(request, 'pantry/grocery_list_table.html', {'products': products})
+            
+    else:
 		cursor.execute("""
 						CREATE VIEW if not exists PickupClient AS
 						SELECT c.CID, CASE

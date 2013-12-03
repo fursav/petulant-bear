@@ -8,6 +8,7 @@ Reports
 <script>
 $(document).ready(function() {
     $('input[name=rm]').click(function(){changeTable();});
+    $('input[name=rt]').click(function(){changeTable();});
     $("#report_type").buttonset();  
     /*$('input[name=tt]').change(function(){
 
@@ -18,7 +19,8 @@ $(document).ready(function() {
 
 function changeTable() {
     rm = $('input[name=rm]:checked').val()
-    $.get( "{% url 'pantry:reports' %}",{"rm":rm}).done(function( data ) {
+    rt = $('input[name=rt]:checked').val()
+    $.get( "{% url 'pantry:reports' %}",{"rm":rm, "rt":rt}).done(function( data ) {
         //alert( "Data Loaded: " + data );
         $("#report_div").html(data);
         styleUI();
