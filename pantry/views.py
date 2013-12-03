@@ -8,8 +8,9 @@ from django.template import RequestContext
 from django.forms.formsets import formset_factory
 import datetime, calendar
 # Create your views here.
-
 #client_reference_id = -1
+
+
 
 class LoginForm(forms.Form):
     username = forms.CharField(max_length=30)
@@ -25,7 +26,7 @@ class AddDropOffForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         cursor = connection.cursor()
-        cursor.execute("SELECT ProductName FROM Product")
+        cursor.execute("SELECT ProductName FROM Product ORDER BY ProductName")
         names = cursor.fetchall()
         names = [(x[0],x[0]) for x in names]
         super(AddDropOffForm, self).__init__(*args, **kwargs)
@@ -403,7 +404,7 @@ def view_clients(request):
 		if q is not None:     
 			cursor = connection.cursor()
 			cursor.execute("""
-							SELECT CLName, CFName, Street || " " || City || ", " || State || " " || Zip as Address, CPhone, Start
+							SELECT CLName, CFName, Apt || " " || Street || " " || City || ", " || State || " " || Zip as Address, CPhone, Start
 							FROM Client
 							WHERE CLName LIKE %s OR CFName like %s OR CPhone like %s;
 							""",['%' + q + '%', '%' + q + '%', '%' + q + '%'])
@@ -412,7 +413,7 @@ def view_clients(request):
 
 	cursor = connection.cursor()
 	cursor.execute("""
-					SELECT CLName, CFName, Street || " " || City || ", " || State || " " || Zip as Address, CPhone, Start
+					SELECT CLName, CFName, Apt || " " || Street || " " || City || ", " || State || " " || Zip as Address, CPhone, Start
 					FROM Client
 					""")
 	clients = cursor.fetchall()
@@ -593,7 +594,8 @@ def add_family_member(request):
 	return render(request, 'pantry/add_family.html', {'form': form,})
 	
 def view_reports(request):
-	cursor = connection.cursor()
+	cursor = connection.cursor()	
+	cursor.execute("DROP VIEW if exists PickupClient")
 	if request.is_ajax():
 		rm = request.GET.get('rm')
 		print(rm)
@@ -734,7 +736,6 @@ def view_reports(request):
 						FROM almost NATURAL JOIN tot_food_cost;
 						""")
 		totals = cursor.fetchone()
-		cursor.execute("DROP VIEW PickupClient")
 		return render(request, 'pantry/reports.html', {'data': data, 'totals':totals})
     
 
