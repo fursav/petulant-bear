@@ -1,0 +1,15 @@
+<table>
+    <tr>
+        <th>Product</th>
+        <th>Quantity</th>
+        <th>Last Month Quantity</th>
+    </tr>
+
+{% for product in products %}
+    <tr>
+        <td>{{product.0}}</td>
+        <td>{{product.1}}</td>
+        <td>{{product.2}}</td>
+    </tr>
+{% endfor %}
+</table>
