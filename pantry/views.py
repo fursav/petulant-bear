@@ -231,6 +231,7 @@ def view_dropoffs(request):
                     SELECT Dropofftransaction.ProductName, SourceName as Source, Quantity, Date
 					FROM DropoffTransaction
 					JOIN Product on Product.ProductName = DropoffTransaction.ProductName
+					WHERE strftime('%m','2013-11-01') = strftime('%m', Date);
                    """)
 	#cursor.execute("SELECT * FROM DropoffTransaction")
     dropoffs = cursor.fetchall()
@@ -652,16 +653,17 @@ def view_reports(request):
     							""")
                 cursor.execute("""
     				CREATE VIEW if not exists almost as
-    				SELECT pickupclient.week, count(Distinct CID) as [num_households],
-    					(CASE WHEN a.nums IS NULL THEN 0 ELSE a.nums END) AS [u18],
-    					(CASE WHEN b.nums IS NULL THEN 0 ELSE b.nums END) AS [18-64],
-    					(CASE WHEN c.nums IS NULL THEN 0 ELSE c.nums END) AS [65+],
-    					count(CID) AS [Total People]
-    				FROM Pickupclient
-    				LEFT JOIN a on pickupclient.week = a.week 
-    				LEFT JOIN b on pickupclient.week = b.week
-    				LEFT JOIN c on pickupclient.week = c.week
-    				GROUP BY pickupclient.week
+    				SELECT fullweek.week, count(Distinct CID) as [num_households],
+                        (CASE WHEN a.nums IS NULL THEN 0 ELSE a.nums END) AS [u18],
+                        (CASE WHEN b.nums IS NULL THEN 0 ELSE b.nums END) AS [18-64],
+                        (CASE WHEN c.nums IS NULL THEN 0 ELSE c.nums END) AS [65+],
+                        count(CID) AS [Total People]
+                    FROM (weeks
+                    LEFT JOIN pickupclient on pickupclient.week = weeks.week) as fullweek
+                    LEFT JOIN a on fullweek.week = a.week 
+                    LEFT JOIN b on fullweek.week = b.week
+                    LEFT JOIN c on fullweek.week = c.week
+                    GROUP BY fullweek.week;
     				""")
     		cursor.execute("""
     						CREATE VIEW if not exists tot_food_cost AS
@@ -670,8 +672,9 @@ def view_reports(request):
     						GROUP BY week;
     						""")
     		cursor.execute("""
-    						SELECT *
-    						FROM almost NATURAL JOIN tot_food_cost
+    						SELECT almost.week, almost.num_households, almost.u18, almost.[18-64], almost.[65+], almost.[Total People], ifnull(tot_food_cost.[total_cost],0)
+                            FROM almost LEFT JOIN tot_food_cost
+                            ON almost.week = tot_food_cost.week;
     						""")
     		data = cursor.fetchall()
     		cursor.execute("""
