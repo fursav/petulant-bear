@@ -8,7 +8,14 @@ Reports
 <script>
 $(document).ready(function() {
     $('input[name=rm]').click(function(){changeTable();});
-    $('input[name=rt]').click(function(){changeTable();});
+    $('input[name=rt]').click(function(){
+        changeTable();
+        if ($('#radio2').is(':checked'))
+            $("#report_month").hide();
+        else
+            $("#report_month").show();
+    });
+    $('#radio2').toggle
     $("#report_type").buttonset();  
     /*$('input[name=tt]').change(function(){
 
