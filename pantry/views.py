@@ -605,8 +605,8 @@ def view_reports(request):
                 cursor.execute("""
     							CREATE VIEW if not exists PickupClient AS
     							SELECT c.CID, CASE
-    							  WHEN c.DOB > date('now','-18 years') THEN 0
-    							  WHEN c.DOB <= date('now','-18 years') AND c.DOB >= date('now','-65 years') THEN 1
+    							  WHEN c.DOB > date('2013-11-25','-18 years') THEN 0
+    							  WHEN c.DOB <= date('2013-11-25','-18 years') AND c.DOB >= date('2013-11-25','-65 years') THEN 1
     							  ELSE 2
     							  END AS agegroup,
     							  CASE
@@ -623,15 +623,16 @@ def view_reports(request):
     							JOIN Client
     							JOIN bag_cost 
     							JOIN PickupTransaction
-    							WHERE c.CID = Client.CID AND bag_cost.BagName = Client.BagName AND c.CID = PickupTransaction.CID AND strftime('%m',Date) = strftime('%m',date('now'))
+    							WHERE c.CID = Client.CID AND bag_cost.BagName = Client.BagName 
+								AND c.CID = PickupTransaction.CID AND strftime('%m',Date) = strftime('%m',date('2013-11-25'))
     							ORDER BY Week;
     							""")
             elif rm == "last_month":
                 cursor.execute("""
     							CREATE VIEW if not exists PickupClient AS
     							SELECT c.CID, CASE
-    							  WHEN c.DOB > date('now','-18 years') THEN 0
-    							  WHEN c.DOB <= date('now','-18 years') AND c.DOB >= date('now','-65 years') THEN 1
+    							  WHEN c.DOB > date('2013-11-25','-18 years') THEN 0
+    							  WHEN c.DOB <= date('2013-11-25','-18 years') AND c.DOB >= date('2013-11-25','-65 years') THEN 1
     							  ELSE 2
     							  END AS agegroup,
     							  CASE
@@ -648,9 +649,10 @@ def view_reports(request):
     							JOIN Client
     							JOIN bag_cost 
     							JOIN PickupTransaction
-    							WHERE c.CID = Client.CID AND bag_cost.BagName = Client.BagName AND c.CID = PickupTransaction.CID AND strftime('%m',Date) = strftime('%m',date('now','-1 months'))
+    							WHERE c.CID = Client.CID AND bag_cost.BagName = Client.BagName AND c.CID = PickupTransaction.CID 
+								AND strftime('%m',Date) = strftime('%m',date('2013-11-25','-1 months'))
     							ORDER BY Week;
-    							""")
+    				""")
                 cursor.execute("""
     				CREATE VIEW if not exists almost as
     				SELECT fullweek.week, count(Distinct CID) as [num_households],
@@ -698,7 +700,8 @@ def view_reports(request):
                             FROM Pickuptransaction 
                             JOIN Client
                             JOIN Holds 
-                            WHERE Pickuptransaction.CID = Client.CID AND Holds.BagName = Client.BagName AND  strftime('%m',date(date)) = strftime('%m',date('now','-1 months'));""")
+                            WHERE Pickuptransaction.CID = Client.CID AND Holds.BagName = Client.BagName
+							AND  strftime('%m',date(date)) = strftime('%m',date('2013-11-25','-1 months'));""")
 
             cursor.execute("""                
                             CREATE VIEW if not exists groc_list AS
@@ -713,14 +716,13 @@ def view_reports(request):
                             FROM groc_list
                             GROUP BY prodname;""")
             products = cursor.fetchall()
-            return render(request, 'pantry/grocery_list_table.html', {'products': products})
-            
+            return render(request, 'pantry/grocery_list_table.html', {'products': products})            
     else:
 		cursor.execute("""
 						CREATE VIEW if not exists PickupClient AS
 						SELECT c.CID, CASE
-						  WHEN c.DOB > date('now','-18 years') THEN 0
-						  WHEN c.DOB <= date('now','-18 years') AND c.DOB >= date('now','-65 years') THEN 1
+						  WHEN c.DOB > date('2013-11-25','-18 years') THEN 0
+						  WHEN c.DOB <= date('2013-11-25','-18 years') AND c.DOB >= date('2013-11-25','-65 years') THEN 1
 						  ELSE 2
 						  END AS agegroup,
 						  CASE
@@ -737,7 +739,8 @@ def view_reports(request):
 						JOIN Client
 						JOIN bag_cost 
 						JOIN PickupTransaction
-						WHERE c.CID = Client.CID AND bag_cost.BagName = Client.BagName AND c.CID = PickupTransaction.CID AND strftime('%m',Date) = strftime('%m',date('now'))
+						WHERE c.CID = Client.CID AND bag_cost.BagName = Client.BagName AND c.CID = PickupTransaction.CID 
+						AND strftime('%m',Date) = strftime('%m',date('2013-11-25'))
 						ORDER BY Week;
 						""")
 		cursor.execute("""
