@@ -179,6 +179,7 @@ def view_products(request):
                     FROM Product
                     LEFT JOIN DropoffTransaction
                     ON Product.ProductName = DropoffTransaction.ProductName
+                    WHERE strftime("%m","2013-11-11") = strftime("%m",date)
                     GROUP BY Product.ProductName;
                    """)
     cursor.execute("""
@@ -186,7 +187,7 @@ def view_products(request):
                     FROM PickupTransaction 
                     JOIN Client 
                     ON PickupTransaction.CID 
-                    WHERE PickupTransaction.CID = Client.CID;
+                    WHERE PickupTransaction.CID = Client.CID AND strftime("%m","2013-11-11") = strftime("%m",date);
                    """)
     cursor.execute("""
                     CREATE VIEW if not exists PickedUpQty AS SELECT ProductName, SUM(CurrentMnthQty) AS CMQ
