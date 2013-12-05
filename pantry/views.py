@@ -318,7 +318,6 @@ def edit_bag(request, BagName):
         #delete products
         removed_products = params.getlist("remove_product")
         for pname in removed_products:
-            print pname
             cursor = connection.cursor()
             cursor.execute("""
 					        DELETE FROM Holds
@@ -442,7 +441,6 @@ def add_client(request):
 			try:
 				cursor.execute("SELECT CID FROM Client ORDER BY CID desc")
 				topCID = cursor.fetchone()
-				print topCID[0]
 				cursor.execute("INSERT INTO Client VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)", 
 				[(topCID[0]+1), first_name, last_name, phone, gender, DOB, start, pDay, apt, street, city, state, zip, bag_name])
 				#client_reference_id = topCID[0] + 1
@@ -653,40 +651,40 @@ def view_reports(request):
 								AND strftime('%m',Date) = strftime('%m',date('2013-11-25','-1 months'))
     							ORDER BY Week;
     				""")
-                cursor.execute("""
-    				CREATE VIEW if not exists almost as
-    				SELECT fullweek.week, count(Distinct CID) as [num_households],
-                        (CASE WHEN a.nums IS NULL THEN 0 ELSE a.nums END) AS [u18],
-                        (CASE WHEN b.nums IS NULL THEN 0 ELSE b.nums END) AS [18-64],
-                        (CASE WHEN c.nums IS NULL THEN 0 ELSE c.nums END) AS [65+],
-                        count(CID) AS [Total People]
-                    FROM (weeks
-                    LEFT JOIN pickupclient on pickupclient.week = weeks.week) as fullweek
-                    LEFT JOIN a on fullweek.week = a.week 
-                    LEFT JOIN b on fullweek.week = b.week
-                    LEFT JOIN c on fullweek.week = c.week
-                    GROUP BY fullweek.week;
-    				""")
-    		cursor.execute("""
+            cursor.execute("""
+				CREATE VIEW if not exists almost as
+				SELECT fullweek.week, count(Distinct CID) as [num_households],
+                    (CASE WHEN a.nums IS NULL THEN 0 ELSE a.nums END) AS [u18],
+                    (CASE WHEN b.nums IS NULL THEN 0 ELSE b.nums END) AS [18-64],
+                    (CASE WHEN c.nums IS NULL THEN 0 ELSE c.nums END) AS [65+],
+                    count(CID) AS [Total People]
+                FROM (weeks
+                LEFT JOIN pickupclient on pickupclient.week = weeks.week) as fullweek
+                LEFT JOIN a on fullweek.week = a.week 
+                LEFT JOIN b on fullweek.week = b.week
+                LEFT JOIN c on fullweek.week = c.week
+                GROUP BY fullweek.week;
+				""")
+            cursor.execute("""
     						CREATE VIEW if not exists tot_food_cost AS
     						SELECT week, sum(cost1) as total_cost
     						FROM (SELECT DISTINCT CID, cost1, week FROM Pickupclient)
     						GROUP BY week;
     						""")
-    		cursor.execute("""
+            cursor.execute("""
     						SELECT almost.week, almost.num_households, almost.u18, almost.[18-64], almost.[65+], almost.[Total People], ifnull(tot_food_cost.[total_cost],0)
                             FROM almost LEFT JOIN tot_food_cost
                             ON almost.week = tot_food_cost.week;
     						""")
-    		data = cursor.fetchall()
-    		cursor.execute("""
+            data = cursor.fetchall()
+            cursor.execute("""
     						SELECT sum(num_households),sum(u18),sum([18-64]),sum([65+]),
     						sum([total people]), sum(total_cost)
     						FROM almost NATURAL JOIN tot_food_cost;
     						""")
-    		totals = cursor.fetchone()
-    		cursor.execute("DROP VIEW PickupClient")
-    		return render(request, 'pantry/service_report_table.html', {'data': data, 'totals':totals})
+            totals = cursor.fetchone()
+            cursor.execute("DROP VIEW PickupClient")
+            return render(request, 'pantry/service_report_table.html', {'data': data, 'totals':totals})
     	else: 
     	    cursor.execute("""
     	                    CREATE VIEW if not exists gl_now AS
@@ -744,18 +742,19 @@ def view_reports(request):
 						ORDER BY Week;
 						""")
 		cursor.execute("""
-						CREATE VIEW if not exists almost as
-						SELECT pickupclient.week, count(Distinct CID) as [num_households],
-							(CASE WHEN a.nums IS NULL THEN 0 ELSE a.nums END) AS [u18],
-							(CASE WHEN b.nums IS NULL THEN 0 ELSE b.nums END) AS [18-64],
-							(CASE WHEN c.nums IS NULL THEN 0 ELSE c.nums END) AS [65+],
-							count(CID) AS [Total People]
-						FROM Pickupclient
-						LEFT JOIN a on pickupclient.week = a.week 
-						LEFT JOIN b on pickupclient.week = b.week
-						LEFT JOIN c on pickupclient.week = c.week
-						GROUP BY pickupclient.week
-						""")
+				CREATE VIEW if not exists almost as
+				SELECT fullweek.week, count(Distinct CID) as [num_households],
+                    (CASE WHEN a.nums IS NULL THEN 0 ELSE a.nums END) AS [u18],
+                    (CASE WHEN b.nums IS NULL THEN 0 ELSE b.nums END) AS [18-64],
+                    (CASE WHEN c.nums IS NULL THEN 0 ELSE c.nums END) AS [65+],
+                    count(CID) AS [Total People]
+                FROM (weeks
+                LEFT JOIN pickupclient on pickupclient.week = weeks.week) as fullweek
+                LEFT JOIN a on fullweek.week = a.week 
+                LEFT JOIN b on fullweek.week = b.week
+                LEFT JOIN c on fullweek.week = c.week
+                GROUP BY fullweek.week;
+				""")
 		cursor.execute("""
 						CREATE VIEW if not exists tot_food_cost AS
 						SELECT week, sum(cost1) as total_cost
@@ -763,8 +762,9 @@ def view_reports(request):
 						GROUP BY week;
 						""")
 		cursor.execute("""
-						SELECT *
-						FROM almost NATURAL JOIN tot_food_cost
+						SELECT almost.week, almost.num_households, almost.u18, almost.[18-64], almost.[65+], almost.[Total People], ifnull(tot_food_cost.[total_cost],0)
+                        FROM almost LEFT JOIN tot_food_cost
+                        ON almost.week = tot_food_cost.week;
 						""")
 		data = cursor.fetchall()
 		cursor.execute("""
